@@ -1,0 +1,78 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    font-family: 'Roboto', sans-serif;
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+.pastMessages {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 1em;
+    width: 500px;
+    height: 400px;
+    overflow-y: auto;
+    margin-bottom: 1em;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    width: 300px;
+}
+
+input[type="text"] {
+    padding: 0.5em;
+    font-size: 1em;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+input[type="submit"] {
+    margin-top: 1em;
+    padding: 0.5em;
+    font-size: 1em;
+    border: none;
+    border-radius: 5px;
+    background-color: #333;
+    color: #fff;
+    cursor: pointer;
+}
+
+textarea {
+    padding: 0.5em;
+    font-size: 1em;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    width: 100%;
+    min-height: 50px;
+    max-height: 150px;
+    resize: vertical;
+    overflow: auto;
+}
+
+details {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 0.5em;
+    margin-bottom: 1em;
+    background-color: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+summary {
+    font-weight: 700;
+    cursor: pointer;
+}
+
+summary::-webkit-details-marker {
+    color: #333;
+}
