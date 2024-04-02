@@ -1,5 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
-
+:root {
+    --width: 600px;
+}
 body {
     display: flex;
     flex-direction: column;
@@ -17,8 +19,8 @@ body {
     border: 1px solid #ddd;
     border-radius: 5px;
     padding: 1em;
-    width: 500px;
-    height: 400px;
+    width: var(--width);
+    height: 600px;
     overflow-y: auto;
     margin-bottom: 1em;
 }
@@ -26,7 +28,7 @@ body {
 form {
     display: flex;
     flex-direction: column;
-    width: 300px;
+    width: var(--width);
 }
 
 input[type="text"] {
@@ -71,8 +73,36 @@ details {
 summary {
     font-weight: 700;
     cursor: pointer;
+    margin-left:15px;
 }
 
 summary::-webkit-details-marker {
     color: #333;
 }
+
+img {
+    display: block;
+    margin: auto;
+    max-width: 100%;
+    height: auto;
+}
+
+.loader {
+  border: 5px solid #f3f3f3;
+  border-radius: 50%;
+  border-top: 5px solid #3498db;
+  width: 20px;
+  height: 20px;
+  -webkit-animation: spin 2s linear infinite; /* Safari */
+  animation: spin 2s linear infinite;
+}
+
+@-webkit-keyframes spin {
+    0% { -webkit-transform: rotate(0deg); }
+    100% { -webkit-transform: rotate(360deg); }
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }

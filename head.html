@@ -1,0 +1,28 @@
+<head>
+<link rel="stylesheet" type="text/css" href="/static/styles.css">
+<script>
+window.onload = function() {{
+        var form = document.getElementById('myForm');
+        var textarea = document.getElementById('myTextarea');
+        var spinner = document.getElementById('spinner');
+
+        textarea.addEventListener('keydown', function(event) {{
+            if (event.key == 'Enter') {{
+                event.preventDefault();
+                if(textarea.value.length <= 500) {{
+                    spinner.style.display = 'block';
+                    form.style.display = 'none';
+                    form.submit();
+                    form.reset();
+                }}
+            }}
+        }});
+
+        form.addEventListener('submit', function(event) {{
+            event.preventDefault();
+            spinner.style.display = 'none';
+            form.style.display = 'block';
+        }});
+    }};
+</script>
+</head>
