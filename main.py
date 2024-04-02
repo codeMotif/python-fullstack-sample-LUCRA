@@ -1,7 +1,6 @@
 import os
-from flask import Flask, redirect, request, url_for
+from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
-from transformers import pipeline
 from diffusers import StableDiffusionPipeline
 import torch
 import io
@@ -14,7 +13,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('LUCRA_AI_QUERIES_DATABASE_URI
 db = SQLAlchemy(app)
 
 class AIImageQueryRecord(db.Model):
-    text = db.Column(db.String(500), primary_key=True)
+    text = db.Column(db.String(500), primary_key=True) # We just need the text as the key, since it's unique.
     image = db.Column(db.LargeBinary(length=2**24-1), nullable=False)
 
 with app.app_context():
@@ -75,9 +74,22 @@ def create_image(text: str):
     image = image.convert("P", palette=Image.ADAPTIVE, colors=16).resize((128, 128)).resize((512, 512))
     image.save(byte_arr, format='PNG')
     encoded_image = base64.encodebytes(byte_arr.getvalue()).decode('ascii')
-    image_html = f'<details><summary>{text.upper()}</summary><img src="data:image/png;base64,{encoded_image}"/></details>'
+
+    image_html = f'<details><summary>{text.upper()}</summary><img src="data:image/png;base64,{encoded_image}"/><br>COLOR PALETTE<br>{color_array_html_render(image.convert("RGB").getcolors(maxcolors=16))}</details>'
 
     return image_html
+
+def color_array_html_render(color_array):
+    color_html = ""
+    for color in color_array:
+        hex_color = f"#{color[1][0]:02x}{color[1][1]:02x}{color[1][2]:02x}"
+        r, g, b = color[1]
+        # Calculate the YIQ contrast
+        yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000
+        # Choose black (#000000) for bright colors, and white (#ffffff) for dark colors
+        inverse_color = '#000000' if yiq >= 128 else '#ffffff'
+        color_html += f'<div style="background-color: {hex_color}; color: {inverse_color}; width: {100/8}%; height: 50px; display: inline-block; text-align: center; line-height: 50px;">{hex_color}</div>'
+    return color_html
 
 def generate_image_from_text(text):
     return pipe(text).images[0]
