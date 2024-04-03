@@ -1,6 +1,3 @@
-# ⚠ WOAH HOLD ON THERE! ⚠
-If you're seeing this, I'm not quite ready to turn everything in! I'm going to delete this when the project's done! I still have some comments, reorganization, and other suchlike to do. Please don't assess it in its current state!
-
 ## Python Fullstack Example: PIXEL INSPIRATION
 As a hobbyist amateur pixel art artist and animator, I find myself in need of inspiration for composition, texture, and even color palette. This app is designed to accept simple image-generator prompts and then produce sequences of useful displays of silhouetting, texture, and color palettes, as well as provide permalinks for future reference for those! By prompting the app, you can receive a highly-processed image output, with some useful utilities for quickly grabbing the color palette, viewing the original materials, or even copypasting the pixel-sized information.
 
