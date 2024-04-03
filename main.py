@@ -1,95 +1,147 @@
+# Standard library imports
+import base64
 import os
+import io
+
+# Third-party imports
 from flask import Flask, request
 from flask_sqlalchemy import SQLAlchemy
-from diffusers import StableDiffusionPipeline
-import torch
-import io
-import base64
 from PIL import Image
 from sqlalchemy.exc import SQLAlchemyError
+from urllib.parse import unquote
+import torch
 
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('LUCRA_AI_QUERIES_DATABASE_URI')
-db = SQLAlchemy(app)
+# Local application imports
+from diffusers import StableDiffusionPipeline
+from renderhtml import process_img_to_full_pixel, render_html_block, render_main_display, render_specific_image_html
 
+
+
+#####################
+# SETUP STARTS HERE #
+#####################
+
+# While it's not exactly good practice to throw this all into a big pile, it's more readable for review if I can walk you through it step by step. So I will.
+print("Starting the Flask app...")
+print("Warning!! On first startup, this may be slow as the model is loaded into memory. Subsequent startups will be faster.")
+app = Flask(__name__) # The core of things! Never delete this!
+
+
+
+
+
+# Here, we'll connect to the DB! However, connecting to the DB is optional, or at least gracefully handled -- but we should alert the user!
+try:
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('LUCRA_AI_QUERIES_DATABASE_URI') # Make sure this is set in your environment!
+    if app.config['SQLALCHEMY_DATABASE_URI'] is not None:
+        db = SQLAlchemy(app) # Ideal state. We have a DB!
+        dbexists = True
+    else:
+        print("Your environment doesn't have LUCRA_AI_QUERIES_DATABASE_URI set! Please set that to point it at the database.") # Informing the user...
+except Exception as e:
+    print("Database not found. Running without database.") # The user has a URI but no database here, most likely.
+    print(f"Error: {e}")
+    print("Is your URI correct, and MySQL started?")
+    dbexists = False
+
+# This is the model for the database. It's a simple key-value store, with the key being the text and the value being the image.
 class AIImageQueryRecord(db.Model):
-    text = db.Column(db.String(500), primary_key=True) # We just need the text as the key, since it's unique.
+    text = db.Column(db.String(500), primary_key=True) # The text is unique!
     image = db.Column(db.LargeBinary(length=2**24-1), nullable=False)
+    # Wouldn't it be nice to have timestamps and voting? Future feature.
 
-with app.app_context():
-    db.create_all()
+# Here, we'll configure the DB, if it's not already configured.
+if dbexists:
+    with app.app_context():
+        db.create_all()
 
-messages = [] 
-model_id = "runwayml/stable-diffusion-v1-5"
-pipe = StableDiffusionPipeline.from_pretrained(model_id, torch_dtype=torch.float16)
-pipe = pipe.to("cuda")
+# And that's it for Flask and the DB.
+        
 
-def get_head():
-    with open('head.html', 'r') as file:
-        return file.read()
 
+
+# Now we need to set up the model.
+
+messages = [] # HTML strings of images and their color palettes
+# Not the best model, but that's easier to change later.
+cudawarning = False
+if torch.cuda.is_available(): # If we're on CUDA, we go faster.
+    pipe = StableDiffusionPipeline.from_pretrained("runwayml/stable-diffusion-v1-5", torch_dtype=torch.float16) # This loads a stable diffusion model.
+    pipe = pipe.to("cuda") # It's a big model! Please use this.
+else:
+    cudawarning = True
+    print("CUDA not available. Running on CPU.")
+    print("\033[91mIt's strongly recommended that you quit this program and re-run it on a machine with a GPU and CUDA drivers.\033[0m")
+    pipe = StableDiffusionPipeline.from_pretrained("runwayml/stable-diffusion-v1-5")
+    pipe = pipe.to("cpu") # Please don't run this on a conventional laptop. Please.
+
+# And that's the model set up.
+
+###################
+# SETUP ENDS HERE #
+###################
+
+
+# Set up the frontend. This is the chat-like interface, even though it's not really a chat.
+# We don't need a distinct post frontend. 
 @app.route('/', methods=['GET', 'POST'])
 def render_chat():
     if request.method == 'POST':
         text = request.form.get('text')
         image = create_image(text)
         messages.append(image)
-    return f'''
-        {get_head()}
-        <body>
-        <h1>PIXEL INSPIRATIONS</h1>
-            <div class="pastMessages">
-                {"<br>".join(messages)}
-            </div>
-            <div id="spinner" style="display: none;">
-                <div class="loader"></div>
-            </div>
-            <form id="myForm" method="POST" action="/">
-                <textarea id="myTextarea" name="text" maxlength="500"></textarea>
-            </form>
-        </body>
-    '''
+    return render_main_display(messages, cudawarning)
+
+@app.route('/cachedimages/<string:text>', methods=['GET'])
+def render_cached_image(text):
+    text = unquote(text)
+    if dbexists:
+        image_record:AIImageQueryRecord = AIImageQueryRecord.query.get(text)
+        if image_record is not None:
+            return render_specific_image_html(image_record)
+        else:
+            return "No image found for the given text.", 404
+    else:
+        return "Database not found.", 500
+
+
+
+
 
 
 def create_image(text: str):
     text = text.strip().lower()    
     try:
-        old_query = AIImageQueryRecord.query.get(text)
-        if old_query is not None:
-            image = Image.open(io.BytesIO(old_query.image))
-        else:
-            image = generate_image_from_text(text)
-            new_entry_arr = io.BytesIO()
-            image.save(new_entry_arr, format='PNG')
-            new_entry_arr.seek(0)
-            db.session.add(AIImageQueryRecord(text=text, image=new_entry_arr.read()))
-            db.session.commit()
+        image = create_or_retrieve_cached_image(text)
     except SQLAlchemyError as e:
-        # This should have real logging in production. Which is to say in a real project.
+        # This should have real logging in production.
         print(f"Database error: {e}")
         image = generate_image_from_text(text)
     except Exception as e:
         raise e
     byte_arr = io.BytesIO()
-    image = image.convert("P", palette=Image.ADAPTIVE, colors=16).resize((128, 128)).resize((512, 512))
+    image = process_img_to_full_pixel(image)
     image.save(byte_arr, format='PNG')
     encoded_image = base64.encodebytes(byte_arr.getvalue()).decode('ascii')
 
-    image_html = f'<details><summary>{text.upper()}</summary><img src="data:image/png;base64,{encoded_image}"/><br>COLOR PALETTE<br>{color_array_html_render(image.convert("RGB").getcolors(maxcolors=16))}</details>'
-
+    image_html = render_html_block(text, encoded_image, image)
     return image_html
 
-def color_array_html_render(color_array):
-    color_html = ""
-    for color in color_array:
-        hex_color = f"#{color[1][0]:02x}{color[1][1]:02x}{color[1][2]:02x}"
-        r, g, b = color[1]
-        # Calculate the YIQ contrast
-        yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000
-        # Choose black (#000000) for bright colors, and white (#ffffff) for dark colors
-        inverse_color = '#000000' if yiq >= 128 else '#ffffff'
-        color_html += f'<div style="background-color: {hex_color}; color: {inverse_color}; width: {100/8}%; height: 50px; display: inline-block; text-align: center; line-height: 50px;">{hex_color}</div>'
-    return color_html
+def create_or_retrieve_cached_image(text):
+    old_query = None
+    image:Image
+    if (dbexists):
+        old_query = AIImageQueryRecord.query.get(text)
+    if old_query is not None:
+        image = Image.open(io.BytesIO(old_query.image))
+    else:
+        image = generate_image_from_text(text)
+        new_entry_arr = io.BytesIO()
+        image.save(new_entry_arr, format='PNG')
+        new_entry_arr.seek(0)
+        db.session.add(AIImageQueryRecord(text=text, image=new_entry_arr.read()))
+        db.session.commit()
+    return image
 
 def generate_image_from_text(text):
     return pipe(text).images[0]

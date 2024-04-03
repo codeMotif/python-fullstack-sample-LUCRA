@@ -1,28 +1,41 @@
 <head>
 <link rel="stylesheet" type="text/css" href="/static/styles.css">
 <script>
-window.onload = function() {{
+window.onload = function() {
+    // Check if we're on the domain root
+    if (window.location.pathname === '/') {
         var form = document.getElementById('myForm');
-        var textarea = document.getElementById('myTextarea');
-        var spinner = document.getElementById('spinner');
+        var textarea = document.getElementById('myTextInput');
+        var loader = document.getElementById('loader');
 
-        textarea.addEventListener('keydown', function(event) {{
-            if (event.key == 'Enter') {{
+        textarea.addEventListener('keydown', function(event) {
+            if (event.key == 'Enter') {
                 event.preventDefault();
-                if(textarea.value.length <= 500) {{
-                    spinner.style.display = 'block';
+                if(textarea.value.length <= 500) {
+                    loader.style.display = 'block';
                     form.style.display = 'none';
                     form.submit();
                     form.reset();
-                }}
-            }}
-        }});
+                }
+            }
+        });
 
-        form.addEventListener('submit', function(event) {{
+        form.addEventListener('submit', function(event) {
             event.preventDefault();
-            spinner.style.display = 'none';
+            loader.style.display = 'none';
             form.style.display = 'block';
-        }});
-    }};
+        });
+    }
+};
+function copyToClipboardAndPulse(element, color) {
+    navigator.clipboard.writeText(color);
+    element.textContent = "COPIED";
+    element.classList.add("pulse");
+
+    setTimeout(function() {
+        element.textContent = color;
+        element.classList.remove("pulse");
+    }, 3000);
+}
 </script>
 </head>
