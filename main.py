@@ -13,7 +13,7 @@ import torch
 
 # Local application imports
 from diffusers import StableDiffusionPipeline
-from renderhtml import process_img_to_full_pixel, render_html_block, render_main_display, render_specific_image_html
+from renderhtml import database_failure_error, not_found_error, process_img_to_full_pixel, render_html_block, render_main_display, render_specific_image_html
 
 
 
@@ -53,7 +53,13 @@ class AIImageQueryRecord(db.Model):
 # Here, we'll configure the DB, if it's not already configured.
 if dbexists:
     with app.app_context():
-        db.create_all()
+        try:
+            db.create_all()
+        except:
+            print("Database was precluded in some way.")
+            print("\033[91mThe database may have become corrupted, or you may be pointing at a database that has another application's data!\033[0m")
+            print("Defaulting to no database.")
+            dbexists = False
 
 # And that's it for Flask and the DB.
         
@@ -82,8 +88,10 @@ else:
 ###################
 
 
-# Set up the frontend. This is the chat-like interface, even though it's not really a chat.
-# We don't need a distinct post frontend. 
+# Set up the frontend. This is the chat-like interface, even though it's not really a chat. And yes, it reloads the page when you submit, technically.
+# We don't need a distinct post frontend. I could make this not refresh using react and such, but this is primarily a flask/AI/DB take-home project.
+# So if the stakeholders don't want it too fancy, I should keep in mind the unspoken interest they might have in simplicity or maintainability.
+# If that's not the case, it wouldn't be too hard to reactify it later.
 @app.route('/', methods=['GET', 'POST'])
 def render_chat():
     if request.method == 'POST':
@@ -92,44 +100,43 @@ def render_chat():
         messages.append(image)
     return render_main_display(messages, cudawarning)
 
+# This is the endpoint for the cached images. Permalinks, and more details for the image!
 @app.route('/cachedimages/<string:text>', methods=['GET'])
 def render_cached_image(text):
-    text = unquote(text)
+    text = unquote(text) # The text was formatted for the URL earlier.
     if dbexists:
-        image_record:AIImageQueryRecord = AIImageQueryRecord.query.get(text)
+        image_record = AIImageQueryRecord.query.get(text) # Retrieve the old data.
         if image_record is not None:
-            return render_specific_image_html(image_record)
+            return render_specific_image_html(image_record) # Render it to the client
         else:
-            return "No image found for the given text.", 404
+            return not_found_error(), 404 # Uh oh! Nothing there. Make a 404 page.
     else:
-        return "Database not found.", 500
+        return database_failure_error(), 500 # Database failure! Make a 500 page.
 
 
 
 
 
 
-def create_image(text: str):
+def create_image(text: str): # Doesn't just create, it also retrieves from the cahce -- if able.
     text = text.strip().lower()    
     try:
-        image = create_or_retrieve_cached_image(text)
+        image = create_or_retrieve_cached_image(text) # Here's where it tries. This will throw an SQL error if the DB is down or otherwise a problem.
     except SQLAlchemyError as e:
         # This should have real logging in production.
         print(f"Database error: {e}")
-        image = generate_image_from_text(text)
+        image = generate_image_from_text(text) # Default to more basic functionality.
     except Exception as e:
         raise e
     byte_arr = io.BytesIO()
-    image = process_img_to_full_pixel(image)
-    image.save(byte_arr, format='PNG')
+    image = process_img_to_full_pixel(image) # This logic turns it from a basic AI-gen image to something that's more pixel-inspiration.
+    image.save(byte_arr, format='PNG') # Need a byte array if I'm going to base64 it for HTML.
     encoded_image = base64.encodebytes(byte_arr.getvalue()).decode('ascii')
-
-    image_html = render_html_block(text, encoded_image, image)
+    image_html = render_html_block(text, encoded_image, image, dbexists) # Render the HTML that it'll use. It's a whole summary/details block.
     return image_html
 
 def create_or_retrieve_cached_image(text):
     old_query = None
-    image:Image
     if (dbexists):
         old_query = AIImageQueryRecord.query.get(text)
     if old_query is not None:

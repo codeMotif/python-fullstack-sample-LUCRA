@@ -114,3 +114,32 @@ img {
         transform: scale(1);
     }
 }
+
+.permimagedisplay {
+    display: flex; 
+    justify-content: space-between;
+    background-color: #fff;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.homelink {
+    display: inline-block;
+    padding: 10px 20px;
+    color: #fff;
+    background-color: #636363;
+    border: none;
+    border-radius: 5px;
+    text-decoration: none;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    position: absolute; 
+    top: 15; 
+    left: 15; 
+}
+
+.homelink:hover {
+    background-color: #717e8b;
+}
