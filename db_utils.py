@@ -22,6 +22,7 @@ def init(app):
         print(f"Error: {e}")
         print("Is your URI correct, and MySQL started?")
         dbexists = False
+    # Setup the DB with the table we need.
     if dbexists:
         with app.app_context():
             try:
@@ -39,16 +40,19 @@ def init(app):
         # Here, we'll configure the DB, if it's not already configured.
         
 def create_or_retrieve_cached_image(text):
-    old_query = None
     if (dbexists):
         old_query = AIImageQueryRecord.query.get(text)
     if old_query is not None:
+        # Retrieve the old data.
         image = Image.open(io.BytesIO(old_query.image))
     else:
+        # If nothing was found, generate something new.
         image = generate_image_from_text(text)
         new_entry_arr = io.BytesIO()
+        # PNGs are a better approach here. Losslessness is key.
         image.save(new_entry_arr, format='PNG')
         new_entry_arr.seek(0)
+        # Cache the new data for the next time.
         db.session.add(AIImageQueryRecord(text=text, image=new_entry_arr.read()))
         db.session.commit()
     return image
