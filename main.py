@@ -11,18 +11,19 @@ print("Starting the Flask app...")
 print("Warning!! On first startup, this may be slow as the model is loaded into memory. Subsequent startups will be faster.")
 app = Flask(__name__) # The core of things! Never delete this!
 
+# Gotta set up the utils. This is the model and the database.
 import db_utils
 db_utils.init(app)
 from db_utils import AIImageQueryRecord, dbexists
 
+# And the image utils. This is the image generation and processing.
 import image_utils
 image_utils.init(app)
-from image_utils import cudawarning, create_image
 
+# And the HTML rendering utils. This is the frontend.
+import html_rendering_utils
 
-from renderhtml import database_failure_error, not_found_error, render_main_display, render_specific_image_html
-
-# And that's the model set up.
+# And that's everything set up.
 
 ###################
 # SETUP ENDS HERE #
@@ -39,10 +40,9 @@ messages = [] # HTML strings of images and their color palettes
 def render_chat():
     if request.method == 'POST':
         text = request.form.get('text')
-
-        image = create_image(text, dbexists)
+        image = image_utils.create_image(text, dbexists)
         messages.append(image)
-    return render_main_display(messages, cudawarning)
+    return html_rendering_utils.render_main_display(messages, image_utils.cudawarning)
 
 # This is the endpoint for the cached images. Permalinks, and more details for the image!
 @app.route('/cachedimages/<string:text>', methods=['GET'])
@@ -51,11 +51,11 @@ def render_cached_image(text):
     if dbexists:
         image_record = AIImageQueryRecord.query.get(text) # Retrieve the old data.
         if image_record is not None:
-            return render_specific_image_html(image_record) # Render it to the client
+            return html_rendering_utils.render_specific_image_html(image_record) # Render it to the client
         else:
-            return not_found_error(), 404 # Uh oh! Nothing there. Make a 404 page.
+            return html_rendering_utils.not_found_error(), 404 # Uh oh! Nothing there. Make a 404 page.
     else:
-        return database_failure_error(), 500 # Database failure! Make a 500 page.
+        return html_rendering_utils.database_failure_error(), 500 # Database failure! Make a 500 page.
 
 
 if __name__ == '__main__':

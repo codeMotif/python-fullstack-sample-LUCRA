@@ -1,12 +1,11 @@
 import base64
 import io
-import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import SQLAlchemyError
 import torch
 
-from renderhtml import process_img_to_full_pixel, render_html_block
+from html_rendering_utils import process_img_to_full_pixel, render_html_block
 from diffusers import StableDiffusionPipeline
 
 
