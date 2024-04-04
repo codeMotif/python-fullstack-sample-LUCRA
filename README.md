@@ -21,7 +21,7 @@ It's nice to have these, and they will significantly speed up generation or acce
 ### Windows/Linux
 Install and activate a [MySQL database](https://dev.mysql.com/downloads/installer/), using the [provided documentation](https://dev.mysql.com/doc/mysql-getting-started/en/). Make sure a new schema has been named and a new user and password have been created.
 
-Set the environment variable `LUCRA_AI_QUERIES_DATABASE_URI` to a MySQL URI formatted like `mysql+pymysql://user:pass@domain/name`. For example, set it to `mysql+pymysql://testuser:h3ll0Lucra37894@localhost/aiquerycache`. You can double-check that this was successful by opening a new window for the command line and typing "echo %LUCRA_AI_QUERIES_DATABASE_URI%", and confirming you can see your URI.
+Set the environment variable `LUCRA_AI_QUERIES_DATABASE_URI` to a MySQL URI formatted like `mysql+pymysql://user:pass@domain/name`. For example, set it to `mysql+pymysql://testuser:h3ll0Lucra37894@localhost/aiquerycache`. You can double-check that this was successful by opening a new window for the command line and typing "echo %LUCRA_AI_QUERIES_DATABASE_URI%" if you're on Windows, or "echo $LUCRA_AI_QUERIES_DATABASE_URI" if you're on Linux, and confirming you can see your URI.
 
 Install [Python 3](https://www.python.org/downloads/) and confirm its installation by opening a new command line window and typing `python --version`. If you see a Python 3 version, you have successfully installed.
 
