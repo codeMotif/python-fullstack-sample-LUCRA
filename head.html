@@ -5,7 +5,7 @@ window.onload = function() {
     // Check if we're on the domain root
     if (window.location.pathname === '/') {                
         var messagesDiv = document.querySelector('.pastmessages');
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;//Make sure the "chat" is scrolled down.
         var form = document.getElementById('myform');
         var textarea = document.getElementById('mytextinput');
         var loader = document.getElementById('loader');

@@ -96,6 +96,7 @@ else:
 def render_chat():
     if request.method == 'POST':
         text = request.form.get('text')
+        
         image = create_image(text)
         messages.append(image)
     return render_main_display(messages, cudawarning)

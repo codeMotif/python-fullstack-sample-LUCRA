@@ -4,6 +4,7 @@ from PIL import Image
 from urllib.parse import quote
 
 def render_html_block(text:str, encoded_image:str, image:Image, dbexists:bool):
+    # Every image must become an HTML block.
     encoded_text = quote(text)
     permalink = f'<a href="/cachedimages/{encoded_text}" class="permalink">PERMALINK AND DETAILS</a>' if dbexists else ""
     return (
@@ -16,6 +17,7 @@ def render_html_block(text:str, encoded_image:str, image:Image, dbexists:bool):
     )
 
 def render_main_display(messages: list, cudawarning: bool = False):
+    # Main page. Mostly static, but it joins in the messages from the AI, in their processed form.
     cuda_warning_message = "<br><p class=\"cudawarning\">Warning: CUDA is not available. Pixel Inspiration has defaulted to CPU. Image generation may take half an hour or more.</p>" if cudawarning else ""
     return f'''
         {get_head()}
@@ -25,7 +27,7 @@ def render_main_display(messages: list, cudawarning: bool = False):
                 {"<br>".join(messages)}
             </div>
             <div id="loader" style="display: none;">
-                <img src="/static/pixel-walk-load-icon.gif" alt="Loading..."/>
+                <img src="/static/pixel-walk-load-icon.gif" alt="Loading..."/> <!--I made this pixel art myself!-->
                 <br>
                 <p class="loadingPopup">I'm on my way to get you your image!{cuda_warning_message}</p>
             </div>
@@ -39,7 +41,8 @@ def get_head():
     with open('head.html', 'r') as file:
         return file.read()
 
-def color_array_html_render(color_array): # I want to be able to quickly see and retrieve the color palette
+def color_array_html_render(color_array): 
+    # I want to be able to quickly see and retrieve the color palette
     color_html = ""
     for color in color_array:
         # Let's get the hex color. I could get CMYKs and such instead, but this format is more consistently useable in art programs, I've found.
@@ -55,7 +58,6 @@ def color_array_html_render(color_array): # I want to be able to quickly see and
         </div>'''
         # You can click on it to copy it onto your clipboard. It's also got a little user feedback! See head.html for more.
     return color_html
-    
 
 def render_specific_image_html(image_record): # This is the permalink page. It's a little more detailed.
     image_raw = Image.open(io.BytesIO(image_record.image)) # It'll provide the source, raw image as well. Is that useful? Sometimes.

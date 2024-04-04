@@ -38,3 +38,6 @@ Double-click "setup.sh" in the main folder, and enjoy the app by navigating to t
 ### I'm a developer reviewing a take-home project and I already know all that, plus I already have most of that set up. My eye was caught by this header when I skimmed this readme!
 
 All you need is the `LUCRA_AI_QUERIES_DATABASE_URI` variable set to the MySQL URI, the app will self-establish its own table. If no DB is found, it'll revert to DBless behavior. You can just run main.py with python and go to http://127.0.0.1:5000/.
+
+# Disclosures
+Some code in this repository was generated using Microsoft Copilot in the development process, such as first drafts of large HTML chunks, arbitrary rote-memory equations such as YIQ calculations, or necessary code repetition. As a coder I make no guarantees about individual snippets, so I don't recommend using them for anything that requires entirely non-generated code. I make plenty of guarantees about the overall concept and design, of course!
