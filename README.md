@@ -3,7 +3,7 @@ As a hobbyist amateur pixel art artist and animator, I find myself in need of in
 
 By prompting the app, you can receive a highly-processed image output, with some useful utilities for quickly grabbing the color palette, viewing the original materials, or even copypasting the pixel-sized information. And since this asked for user feedback, I also added a voting function! Give it a thumbs up or thumbs down. Nothing's done with that yet, and it's not even secured, but I'm sure an admin would find some use for the information.
 
-This should also, hopefully, demonstrate the DB caching, the feedback-focused UI, and the integration with the AI model, such as it is. Happy reviewing, reviewer!
+I've designed and built a lot of apps, but this is the first time I've done it in Python, so it's structured in some funny ways. But this should, hopefully, demonstrate the DB caching, the feedback-focused UI, and the integration with the AI model, such as it is. Happy reviewing, reviewer!
 
 ## Requirements
 
