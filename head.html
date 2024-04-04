@@ -29,6 +29,39 @@ window.onload = function() {
         });
     }
 };
+//Upvote and downvote functions for the images.
+function voteUp(element, text) {
+    if (!element.classList.contains('voted')) {
+        fetch(`/voteup/${text}`, {
+            method: 'POST'
+        }).then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            element.classList.add('voted', 'pulse');
+            element.onclick = null;
+        }).catch(error => {
+            console.error('There has been a problem with your fetch operation:', error);
+        });
+    }
+}
+
+function voteDown(element, text) {
+    if (!element.classList.contains('voted')) {
+        fetch(`/votedown/${text}`, {
+            method: 'POST'
+        }).then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            element.classList.add('voted', 'pulse');
+            element.onclick = null;
+        }).catch(error => {
+            console.error('There has been a problem with your fetch operation:', error);
+        });
+    }
+}
+
 function copyToClipboardAndPulse(element, color) {// This copies the color to the clipboard and pulses the little block.
     // Just some fancy visual feedback, helps the user feel like they've done something.
     navigator.clipboard.writeText(color);

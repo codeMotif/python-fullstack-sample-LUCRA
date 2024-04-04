@@ -143,3 +143,21 @@ img {
 .homelink:hover {
     background-color: #717e8b;
 }
+
+.vote-button {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 1.5em;
+    margin: 0 5px;
+}
+
+.voted {
+    color: #636363;
+    filter: grayscale(100%);
+}
+
+.pastrating {
+    font-size: small;
+    color: gray;
+}

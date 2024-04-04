@@ -47,7 +47,7 @@ def render_chat():
 # This is the endpoint for the cached images. Permalinks, and more details for the image!
 @app.route('/cachedimages/<string:text>', methods=['GET'])
 def render_cached_image(text):
-    text = unquote(text) # The text was formatted for the URL earlier.
+    text = unquote(text)
     if dbexists:
         image_record = AIImageQueryRecord.query.get(text) # Retrieve the old data.
         if image_record is not None:
@@ -57,6 +57,19 @@ def render_cached_image(text):
     else:
         return html_rendering_utils.database_failure_error(), 500 # Database failure! Make a 500 page.
 
+# User feedback! I wasn't sure if this part of things meant that the user should give feedback or feedback should be given to the user.
+# So I implemented them both! The user can vote on the images, and the images will show their past rating.
+# It doesn't do anything for mass repeat voting. Something for later!
+@app.route('/voteup/<string:text>', methods=['POST'])
+def vote_up(text):
+    text = unquote(text)
+    return db_utils.vote(text, 1)
+
+@app.route('/votedown/<string:text>', methods=['POST'])
+def vote_down(text):
+    text = unquote(text)
+    return db_utils.vote(text, -1)
+
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()

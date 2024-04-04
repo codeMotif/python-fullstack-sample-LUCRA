@@ -22,6 +22,13 @@ def init(app):
         print(f"Error: {e}")
         print("Is your URI correct, and MySQL started?")
         dbexists = False
+    # This is the model for the records. It used to be a simple key-value store, with the key being the text and the value being the image. Keep that core.
+    # It's also got votes and such.
+    class AIImageQueryRecord(db.Model):
+        text = db.Column(db.String(500), primary_key=True) # The text is unique!
+        image = db.Column(db.LargeBinary(length=2**24-1), nullable=False)
+        votes = db.Column(db.Integer, default=0)
+        votetotal = db.Column(db.Integer, default=0)
     # Setup the DB with the table we need.
     if dbexists:
         with app.app_context():
@@ -33,18 +40,15 @@ def init(app):
                 print("Defaulting to no database.")
                 dbexists = False
         
-    class AIImageQueryRecord(db.Model):
-        text = db.Column(db.String(500), primary_key=True) # The text is unique!
-        image = db.Column(db.LargeBinary(length=2**24-1), nullable=False)
-        # Wouldn't it be nice to have timestamps and voting? Future feature.
-        # Here, we'll configure the DB, if it's not already configured.
         
 def create_or_retrieve_cached_image(text):
+    rating = 0
     if (dbexists):
         old_query = AIImageQueryRecord.query.get(text)
     if old_query is not None:
         # Retrieve the old data.
         image = Image.open(io.BytesIO(old_query.image))
+        rating = old_query.votes
     else:
         # If nothing was found, generate something new.
         image = generate_image_from_text(text)
@@ -55,4 +59,17 @@ def create_or_retrieve_cached_image(text):
         # Cache the new data for the next time.
         db.session.add(AIImageQueryRecord(text=text, image=new_entry_arr.read()))
         db.session.commit()
-    return image
+    return image, rating
+
+def vote(text, vote):
+    if dbexists:
+        image_record = AIImageQueryRecord.query.get(text)
+        if image_record is not None:
+            image_record.votes += vote
+            image_record.votetotal += 1
+            db.session.commit()
+            return "OK"
+        else:
+            return "NOT FOUND", 404
+    else:
+        return "NO DATABASE", 500

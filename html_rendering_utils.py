@@ -3,16 +3,24 @@ import io
 from PIL import Image
 from urllib.parse import quote
 
-def render_html_block(text:str, encoded_image:str, image:Image, dbexists:bool):
-    # Every image must become an HTML block.
+def render_html_block(text:str, encoded_image:str, image:Image, dbexists:bool, rating:int = 0):
     encoded_text = quote(text)
+    # Permalink, if the DB will allow it.
     permalink = f'<a href="/cachedimages/{encoded_text}" class="permalink">PERMALINK AND DETAILS</a>' if dbexists else ""
+    # If there's no rating, don't show it.
+    # Otherwise, show it!
+    rating_display = f'<p class="pastrating">PAST RATING: {rating}</p>' if rating else "" 
     return (
         f'<details>'
-        f'<summary>{text.upper()}</summary>'
+        f'<summary>{text.upper()}'
+        f'</summary>'
         f'<img src="data:image/png;base64,{encoded_image}"/>'
         f'<div style="text-align:center">{permalink}<br><br>CLICKABLE COLOR PALETTE</div>'
         f'{color_array_html_render(image.convert("RGB").getcolors(maxcolors=16))}'
+        f'<br><br>'
+        f'{rating_display}'
+        f'<button class="vote-button" onclick="voteUp(this, \'{encoded_text}\')">👍</button>'
+        f'<button class="vote-button" onclick="voteDown(this, \'{encoded_text}\')">👎</button>'
         f'</details>'
     )
 

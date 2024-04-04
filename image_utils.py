@@ -35,7 +35,7 @@ def init(main_app: Flask):
 def create_image(text: str, dbexists: bool): # Doesn't just create, it also retrieves from the cahce -- if able.
     text = text.strip().lower()    
     try:
-        image = create_or_retrieve_cached_image(text) # Here's where it tries. This will throw an SQL error if the DB is down or otherwise a problem.
+        image, rating = create_or_retrieve_cached_image(text) # Here's where it tries. This will throw an SQL error if the DB is down or otherwise a problem.
     except SQLAlchemyError as e:
         # This should have real logging in production.
         print(f"Database error: {e}")
@@ -46,7 +46,7 @@ def create_image(text: str, dbexists: bool): # Doesn't just create, it also retr
     image = process_img_to_full_pixel(image) # This logic turns it from a basic AI-gen image to something that's more pixel-inspiration.
     image.save(byte_arr, format='PNG') # Need a byte array if I'm going to base64 it for HTML.
     encoded_image = base64.encodebytes(byte_arr.getvalue()).decode('ascii')
-    image_html = render_html_block(text, encoded_image, image, dbexists) # Render the HTML that it'll use. It's a whole summary/details block.
+    image_html = render_html_block(text, encoded_image, image, dbexists, rating) # Render the HTML that it'll use. It's a whole summary/details block.
     return image_html
 
 
